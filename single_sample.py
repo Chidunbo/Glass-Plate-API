@@ -9,7 +9,7 @@ def get_plate_info(plate_id):
     
     if response.status_code == 200:
         data = response.json()
-        # print(json.dumps(data, indent=4))
+        print(json.dumps(data, indent=4))
     else:
         print(f"Error: Unable to fetch data for plate {plate_id}. Status Code: {response.status_code}")
     
@@ -63,34 +63,18 @@ def get_time(plate_id):
 
 
 # write plate ID, authors, and date of the plate into a CSV file
-def write_plate_info(plate_id, filename="author_info.csv"):
+def write_plate_info(plate_id):
+    # if the file does not exist, create it
+    filename = f"{plate_id}.csv"
     # if the file exists, append to it
     with open(filename, "a") as file:
+        file.write("Plate ID, Date, Author, Notebook\n")
         authors = get_authors(plate_id)
         date = get_time(plate_id)
         notebook = get_notebook(plate_id)
         file.write(f"{plate_id}, {date}, {authors}, {notebook}\n")
     
-    
-# check all the authors in 100 plates
-def check_single_series(plate_amount):
-    # randonly pick 100 numbers between 00001 and 20000
-    # create csv file
-    filename = f"author_info.csv"
-    # write header
-    with open(filename, "w") as file:
-        file.write("Plate ID, Date, Author, Notebook\n")
-
-    for i in range(0, plate_amount):
-        select_number = random.randrange(0, 20000)
-        # fill with zeros to five digits
-        select_plate = str(select_number).zfill(5)
-        select_plate_id = "a" + select_plate
-        #print(select_plate_id)
-        write_plate_info(select_plate_id)
 
 
-
-# plate_id = "a00001" 
-plate_amount_now = 500
-__name__ == "__main__" and check_single_series(plate_amount_now)
+plate_id = "a15005" 
+__name__ == "__main__" and write_plate_info(plate_id)
