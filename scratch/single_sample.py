@@ -76,5 +76,5 @@ def write_plate_info(plate_id):
     
 
 
-plate_id = "a15005" 
+plate_id = "a00005" 
 __name__ == "__main__" and write_plate_info(plate_id)
