@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 # Load the dataset and print header
 df = pd.read_csv('data\date_location_info.csv')
+df_cleaned = df.drop_duplicates()
 df.columns = df.columns.str.strip() 
 
 # count total number of data
@@ -22,6 +23,9 @@ valid_data_amount = total_valid_data.shape[0]
 # extract each column data
 plate_id = df['Plate ID']
 date = df['Date']
+# Convert RA_CTR and DEC_CTR to numeric (ensuring they are correctly handled)
+df['RA_CTR'] = pd.to_numeric(df['RA_CTR'], errors='coerce')
+df['DEC_CTR'] = pd.to_numeric(df['DEC_CTR'], errors='coerce')
 ra_ctr = df['RA_CTR']
 dec_ctr = df['DEC_CTR']
 
@@ -30,7 +34,7 @@ year = []
 for i in range(total_valid_data.shape[0]):
     year.append(date[i][0:5])
 year = np.array(year)
-print(year)
+# print(year)
 
 # make histogram with the year info
 year = np.sort(year)
@@ -41,12 +45,10 @@ plt.ylabel('Number of Plates')
 plt.title('Histogram of Plates by Year')
 plt.show()
 
-# make scatter plot with RA and DEC
-plt.scatter(ra_ctr, dec_ctr)
+# Scatter plot RA vs DEC without automatic sorting
+plt.figure(figsize=(8, 6))
+plt.scatter(df['RA_CTR'], df['DEC_CTR'], alpha=0.7)
 plt.xlabel('RA Center')
 plt.ylabel('DEC Center')
-# don't show x and y labels
-plt.xticks([])
-plt.yticks([])
 plt.title('Location of Exposures')
 plt.show()
