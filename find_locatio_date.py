@@ -63,7 +63,7 @@ def write_plate_info(plate_id, filename):
 def check_single_series(plate_amount):
     # randonly pick 100 numbers between 00001 and 20000
     # create csv file
-    filename = f"date_location_info.csv"
+    filename = f"date_location_info3.csv"
     # write header
     with open(filename, "w") as file:
         file.write("Plate ID, Date, RA_CTR, DEC_CTR\n")
@@ -76,5 +76,5 @@ def check_single_series(plate_amount):
         #print(select_plate_id)
         write_plate_info(select_plate_id, filename)
     
-plate_amount_now = 500
+plate_amount_now = 1000
 __name__ == "__main__" and check_single_series(plate_amount_now)
