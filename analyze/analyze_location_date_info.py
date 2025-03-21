@@ -49,11 +49,30 @@ try:
     year = year.astype(int)  # Convert from string to integer
 except ValueError:
     raise ValueError("Error: 'year' array contains non-numeric values.")
-plt.hist(year, bins=30)
+plt.hist(year, bins=30,edgecolor='black', alpha=0.75)
 plt.xticks(rotation=45)
 plt.xlabel('Year')
 plt.ylabel('Number of Plates')
 plt.title('Histogram of Plates by Year')
+plt.show()
+
+##########################################################################################################
+# Plot 4: histogram of month
+# take the month from date
+# Sample data loading (assuming valid_df is already defined and contains 'Date' column)
+# Ensure 'Date' column is properly parsed
+valid_df['Date'] = pd.to_datetime(valid_df['Date'], errors='coerce')  # Converts to datetime, invalid values become NaT
+
+# Extract month values, dropping NaT values
+valid_df = valid_df.dropna(subset=['Date'])  # Remove rows where Date is NaT
+month = valid_df['Date'].dt.month  # Extract month as an integer
+
+# Plot histogram
+plt.hist(month, bins=12, range=(1, 12), edgecolor='black', alpha=0.75)
+plt.xticks(range(1, 13))
+plt.xlabel('Month')
+plt.ylabel('Number of Plates')
+plt.title('Histogram of Plates by Month')
 plt.show()
 
 ##########################################################################################################
