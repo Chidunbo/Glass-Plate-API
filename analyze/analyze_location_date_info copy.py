@@ -39,7 +39,6 @@ year = np.array(year)
 # print(year)
 
 
-
 ##########################################################################################################
 # Plot 1: histogram with the year info
 year = np.sort(year)
