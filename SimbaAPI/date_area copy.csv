@@ -1,0 +1,2 @@
+Plate ID, Date, RA_CTR, DEC_CTR, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y, crpix1,crpix2, naxis1, naxis2 
+a03193, 1898-07-24T02:54:14.4Z, 224.357036, -32.934064, -0.000182012, -2.67862e-06, -2.69831e-06, 0.000181947,18224.5582,15033.2983, 35268, 31627

@@ -9,7 +9,7 @@ def get_plate_info(plate_id):
     
     if response.status_code == 200:
         data = response.json()
-        # print(json.dumps(data, indent=4))
+        print(json.dumps(data, indent=4))
     else:
         print(f"Error: Unable to fetch data for plate {plate_id}. Status Code: {response.status_code}")
     
@@ -93,4 +93,4 @@ def check_single_series(plate_amount):
 
 # plate_id = "a00001" 
 plate_amount_now = 500
-__name__ == "__main__" and check_single_series(plate_amount_now)
+__name__ == "__main__" and get_plate_info("a00001")
