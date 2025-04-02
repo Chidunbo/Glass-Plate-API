@@ -1,6 +1,7 @@
 import requests
 import json
 import random
+import time
 
 # directly request a single plate's information from the API and print
 def get_plate_info(plate_id):
@@ -83,7 +84,7 @@ def write_plate_info(plate_id, filename):
         file.write(f"{plate_id}, {date}, {ra_center}, {dec_center}, {RA_delta_x}, {RA_delta_y}, {Dec_delta_x}, {Dec_delta_y},{crpix1},{crpix2}, {naxis1}, {naxis2}\n")
 
         # check all the authors in 100 plates
-def check_single_series(plate_amount, series_letter):
+def check_single_series(plate_start_id, plate_end_id, series_letter):
     # randonly pick 100 numbers between 00001 and 20000
     # create csv file
     filename = f"date_area.csv"
@@ -91,14 +92,26 @@ def check_single_series(plate_amount, series_letter):
     with open(filename, "w") as file:
         file.write("Plate ID, Date, RA_CTR, DEC_CTR, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y, crpix1,crpix2, naxis1, naxis2 \n")
 
-    for i in range(0, plate_amount):
-        select_number = random.randrange(0, 20000)
+    for i in range(plate_start_id, plate_end_id):
         # fill with zeros to five digits
-        select_plate = str(select_number).zfill(5)
+        select_plate = str(i).zfill(5)
         select_plate_id = series_letter + select_plate
         #print(select_plate_id)
         write_plate_info(select_plate_id, filename)
     
-plate_amount_now = 5
+
+######################################
+# change the plate ID here
+plate_start_id = 1
+plate_end_id = 6999
+######################################
 series_letter = 'a'
-__name__ == "__main__" and check_single_series(plate_amount_now, series_letter)
+if __name__ == "__main__": 
+    start_time = time.time()  # Start timer
+
+    check_single_series(plate_start_id, plate_end_id, series_letter)
+
+    end_time = time.time()  # End timer
+    duration = end_time - start_time
+
+    print(f"\nFinished in {duration:.2f} seconds ({duration/60:.2f} minutes)")
