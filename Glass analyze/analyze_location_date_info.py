@@ -2,10 +2,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+from new_simba_API_copy import calculate_radius
 
 
 # Load the dataset and print header
-df = pd.read_csv('data\date_location_info_2000.csv')
+df = pd.read_csv('Simbad analyze/A_series_total.csv')
 df_cleaned = df.drop_duplicates()
 df.columns = df.columns.str.strip() 
 
@@ -39,6 +40,7 @@ year = np.array(year)
 # print(year)
 
 
+
 ##########################################################################################################
 # Plot 1: histogram with the year info
 year = np.sort(year)
@@ -68,7 +70,7 @@ valid_df = valid_df.dropna(subset=['Date'])  # Remove rows where Date is NaT
 month = valid_df['Date'].dt.month  # Extract month as an integer
 
 # Plot histogram
-plt.hist(month, bins=12, range=(1, 12), edgecolor='black', alpha=0.75)
+plt.hist(month, bins=12, range=(1, 12), edgecolor='black', alpha=0.75) 
 plt.xticks(range(1, 13))
 plt.xlabel('Month')
 plt.ylabel('Number of Plates')
@@ -78,7 +80,9 @@ plt.show()
 ##########################################################################################################
 # Plot 2: Scatter plot RA vs DEC without automatic sorting
 plt.figure(figsize=(8, 6))
-plt.scatter(df['RA_CTR'], df['DEC_CTR'], alpha=0.7)
+plt.scatter(df['RA_CTR'], df['DEC_CTR'], s=5, alpha=0.7)
+#adjust the scatter circle size
+
 plt.xlabel('RA Center')
 plt.ylabel('DEC Center')
 plt.title('Location of Exposures')
@@ -89,7 +93,7 @@ plt.show()
 # subplot for RA and DEC with no datapoints to start with
 fig, ax = plt.subplots()
 plt.subplots_adjust(bottom=0.25)
-sc = ax.scatter(df['RA_CTR'], df['DEC_CTR'], alpha=0.7)
+sc = ax.scatter(df['RA_CTR'], df['DEC_CTR'], s=5, alpha=0.7)
 plt.xlabel('RA Center')
 plt.ylabel('DEC Center')
 plt.title('Location of Exposures')
@@ -110,3 +114,38 @@ def update(val):
 
 year_slider.on_changed(update)
 plt.show()
+
+###########################################################################################################
+# Plot 5: histogram of radius
+# take the radius from data
+radius = []
+for i in range(valid_df.shape[0]):
+    Dec_delta_x = df['Dec_delta_x'][i]
+    Dec_delta_y = df['Dec_delta_y'][i]
+    RA_delta_x = df['RA_delta_x'][i]
+    RA_delta_y = df['RA_delta_y'][i]
+    crpix1 = df['crpix1'][i]
+    crpix2 = df['crpix2'][i]
+    naxis1 = df['naxis1'][i]
+    naxis2 = df['naxis2'][i]
+    try:
+        radius_now = calculate_radius(Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2)
+        radius.append(radius_now)
+    except ValueError:
+        continue
+
+# convert a list raduis to numpy array
+radius = np.array(radius)
+
+# plt.hist(radius, bins=100,edgecolor='black', alpha=0.75)
+# plt.xticks(rotation=45)
+# plt.xlabel('Radius (arcsec)')
+# plt.ylabel('Number of Plates')
+# plt.title('Histogram of Radius')
+# plt.show()
+
+mean_radius = np.mean(radius)
+print(mean_radius)
+# 11391.28850611362 is the mean radius of the A series data
+
+###############################################################################################################

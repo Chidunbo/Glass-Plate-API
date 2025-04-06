@@ -16,7 +16,6 @@ def read_csv_file(filename, row_number):
         line = lines[row_number] # row number - specific line
         data = line.split(",") # each column is an item in the list
 
-        id = data[0]
         date = data[1]
         ra = data[2]
         dec = data[3]
@@ -30,7 +29,7 @@ def read_csv_file(filename, row_number):
         naxis2 = data[11]
 
         
-        return total_lines, id, date, ra, dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2
+        return total_lines, date, ra, dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2
 
 # get the converted coordinate from date, ra, dec
 def convert_coordinate(date, ra, dec):
@@ -46,7 +45,7 @@ def convert_coordinate(date, ra, dec):
     return coord_icrs
 
 def convert_single_csv_row_coordinate(filename, row_number):
-    _, _, date,ra,dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2 = read_csv_file(filename, row_number)
+    _, date,ra,dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2 = read_csv_file(filename, row_number)
     coord = convert_coordinate(date, ra, dec)
     return coord
 
@@ -67,63 +66,72 @@ def calculate_radius(Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpi
     # degree to arcsec unit convertion 
     radius_arcsec = radius_deg * 3600
 
-    # FOR TESTING PURPOSES, I CHANGED THE RADIUS TO BE SMALLER
-    radius_arcsec = 400
-
     print(f'new radius is {radius_arcsec}')
 
     return radius_arcsec
     
 
 # input one pair of RA and DEC, output simbad coordinate
-def query_one_simbad_object_type(ra, dec, radius):
+# set min_flux_v to 10.0 to filter out objects with flux < 10.0 (bigger flux = brighter object)
+def query_bright_objects(ra, dec, radius, min_flux_v=10.0):
     base_url = "https://simbad.cds.unistra.fr/simbad/sim-script"
 
+    # SIMBAD script from: https://simbad.u-strasbg.fr/Pages/guide/sim-url.htx#coo
     script = f"""output console=off script=off
 output.format=ASCII
 list.otypesel=on
 list.idsel=on
-format object form1 "%IDLIST(1),%OTYPE(S)"
+list.fluxsel=on
+V=on
+format object form1 "%IDLIST(1),%OTYPE(S),%FLUXLIST(V;F)"
 query coo {ra} {dec} radius={radius}s frame=ICRS
 """
 
     response = requests.post(base_url, data={"script": script})
-
     results = []
+
     if response.status_code == 200:
         lines = response.text.strip().splitlines()
         for line in lines:
             if not line.startswith(("::", "format", "output")) and ',' in line:
-                parts = line.strip().split(",", 1)
-                if len(parts) == 2:
-                    identifier, otype = parts
-                    results.append((identifier.strip(), otype.strip()))
-        return results  # a list of (name, type)
+                parts = line.strip().split(",")
+                print(f"!!!!STRIPPED {parts}")
+                if len(parts) == 3:
+                    identifier, otype, flux_str = parts
+                    print(f"???? {parts}")
+                    try:
+                        flux = float(flux_str)
+                        if flux >= min_flux_v:
+                            # add to list only if flux is above threshold
+                            results.append((identifier.strip(), otype.strip(), flux))
+                        print("added")
+                    except ValueError:
+                        print(f"Invalid flux value: '{flux_str}' for {identifier}")
+                        continue  # Ignore objects without valid flux
+        return results
     else:
         print(f"SIMBAD query failed with status code {response.status_code}")
-        return [("Error", "Error")]
+        return [("Error", "Error", "Error")]
 
 
 
 
-def query_simbad_whole_csv(filename, output_csv="simbad_results.csv"):
-    csv_row_len, _, _, _, _, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, 1)
+def query_simbad_whole_csv(filename, output_csv):
+    csv_row_len, _,  _, _, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, 1)
     print(csv_row_len)
-    results = [["Plate ID", "Year", "RA (deg)", "Dec (deg)", "radius", "Object Name", "Object Type"]]
+    results = [["RA (deg)", "Dec (deg)", "radius", "Object Name", "Object Type"]]
 
     for i in range(1, csv_row_len + 1):
         coord = convert_single_csv_row_coordinate(filename, i)
         ra = coord.ra.deg
         dec = coord.dec.deg
 
-        _, id, date, _, _, Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, i)
+        _, _, _, _, Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, i)
         radius = calculate_radius(Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2)
 
-        year = date[0:5]
-        
-        objects = query_one_simbad_object_type(ra, dec, radius)
-        for name, otype in objects:
-            results.append([id, year, ra, dec, radius, name, otype])
+        objects = query_bright_objects(ra, dec, radius, min_flux_v=10.0)
+        for name, otype, flux in objects:
+            results.append([ra, dec, radius, name, otype,flux])
 
         print(f"[{i}/{csv_row_len}] {ra:.5f}, {dec:.5f} → {len(objects)} object(s) found")
 
@@ -141,7 +149,12 @@ def query_simbad_whole_csv(filename, output_csv="simbad_results.csv"):
 if __name__ == "__main__":
     start_time = time.time()  # Start timer
 
-    query_simbad_whole_csv("date_area.csv")
+    ############### CHANGE FILENAMES HERE #########################
+    input_filename = "cluster_test_input.csv"
+    output_filename="cluster_test_brightness.csv"
+    ###############################################################
+
+    query_simbad_whole_csv(input_filename, output_filename)
 
     end_time = time.time()  # End timer
     duration = end_time - start_time

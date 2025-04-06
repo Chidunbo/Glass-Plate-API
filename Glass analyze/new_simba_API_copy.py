@@ -66,7 +66,7 @@ def calculate_radius(Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpi
     # degree to arcsec unit convertion 
     radius_arcsec = radius_deg * 3600
 
-    print(f'new radius is {radius_arcsec}')
+    # print(f'new radius is {radius_arcsec}')
 
     return radius_arcsec
     
