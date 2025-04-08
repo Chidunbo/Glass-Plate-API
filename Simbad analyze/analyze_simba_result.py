@@ -3,12 +3,13 @@ import pandas as pd
 from collections import Counter
 
 # csv name
-filename = 'simbad_results.csv'
+filename = 'SimbaAPI\cluster_test.csv'
 
 # Load the dataset and print header
 df = pd.read_csv(filename)
 df_cleaned = df.drop_duplicates()
 df.columns = df.columns.str.strip() 
+print(df.columns.tolist())
 
 # count total number of data
 total_data = df.shape[0]

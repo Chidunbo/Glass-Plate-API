@@ -5,7 +5,7 @@ from matplotlib.widgets import Slider
 
 
 # Load the dataset and print header
-df = pd.read_csv('data\date_location_info_2000.csv')
+df = pd.read_csv('.csv')
 df_cleaned = df.drop_duplicates()
 df.columns = df.columns.str.strip() 
 
@@ -37,7 +37,6 @@ for i in range(valid_df.shape[0]):
     year.append(date[i][0:5])
 year = np.array(year)
 # print(year)
-
 
 
 ##########################################################################################################
