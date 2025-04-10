@@ -31,7 +31,7 @@ def convert_coordinate(ra, dec):
     dec = float(dec)
     # assume our data is FK4 since it is from years before 1976
     # https://fits.gsfc.nasa.gov/users_guide/users_guide/node61.html
-    date = "1923-07-09T04:06:14.400" # assume date is before 
+    date = "1923-07-09T04:06:14.400" # assume date is before
     date = Time(date.strip(), format='isot', scale='utc')
 
     coord_fk4 = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame=FK4, obstime=date)
@@ -124,7 +124,8 @@ input_filename = "random_sky_coordinates.csv"
 output_filename="random_sky_objects.csv"
 ###############################################################
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     query_simbad_whole_csv(input_filename, output_filename)
 
     end_time = time.time()  # End timer

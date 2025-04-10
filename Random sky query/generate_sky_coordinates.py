@@ -31,9 +31,9 @@ def store_sky_coordinate_data(filename, num_coordinates, radius):
 
 
 # create csv file
-if __name__ == "__main__": 
-    filename = f"random_sky_coordinates.csv"
-    num_coordinates = 1000
-    radius = 100
+if __name__ == "__main__":
+    filename = f"random_sky_coordinates_small.csv"
+    num_coordinates = 10
+    radius = 10
 
     store_sky_coordinate_data(filename, num_coordinates, radius)
