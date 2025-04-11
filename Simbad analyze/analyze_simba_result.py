@@ -40,3 +40,9 @@ def object_statistics(filename, plot=True):
         plt.show()
 
     return labels, counts
+
+if __name__ == "__main__":
+    # Example usage
+    filename = 'Simbad Cluster Object Data/1924_0.csv'
+    labels, counts = object_statistics(filename, plot=True)
+    print(labels, counts)
