@@ -16,25 +16,21 @@ def read_csv_file(filename, row_number):
         line = lines[row_number] # row number - specific line
         data = line.split(",") # each column is an item in the list
 
-        date = data[1]
+        date = data[0]
+        cluster = data[1]
         ra = data[2]
         dec = data[3]
-        Dec_delta_x = data[4]
-        Dec_delta_y = data[5]
-        RA_delta_x = data[6]
-        RA_delta_y = data[7]
-        crpix1 = data[8]
-        crpix2 = data[9]
-        naxis1 = data[10] 
-        naxis2 = data[11]
+  
 
-        
-        return total_lines, date, ra, dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2
+        #print(date, cluster, ra, dec)
+        return total_lines, date, cluster, ra, dec
 
 # get the converted coordinate from date, ra, dec
 def convert_coordinate(date, ra, dec):
     print(date, ra, dec)
-    date = Time(date.strip(), format='isot', scale='utc')
+    # randomly assigning a date becuase clusters don't have date just year
+    formatted_date = f"{date.strip()}-01-01T00:00:00"
+    date = Time(formatted_date, format='isot', scale='utc')
     ra = float(ra)
     dec = float(dec)
     # assume our data is FK4 since it is from years before 1976
@@ -46,11 +42,11 @@ def convert_coordinate(date, ra, dec):
     return coord_icrs
 
 def convert_single_csv_row_coordinate(filename, row_number):
-    _, date,ra,dec, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2 = read_csv_file(filename, row_number)
+    total_lines, date, cluster, ra, dec  = read_csv_file(filename, row_number)
     coord = convert_coordinate(date, ra, dec)
     return coord
 
-def calculate_radius(Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpix2, naxis1, naxis2):
+def calculate_radius():
     # # sky unit x,y (degree per pixel)
     # sky_y_deg = np.sqrt(float(RA_delta_y) **2 + float(Dec_delta_y) ** 2)
     # sky_x_deg = np.sqrt(float(RA_delta_x) ** 2 + float(Dec_delta_x) ** 2)
@@ -68,7 +64,7 @@ def calculate_radius(Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y,crpix1,crpi
     # radius_arcsec = radius_deg * 3600
 
     # print(f'new radius is {radius_arcsec}')
-    radius_arcsec = 1800
+    radius_arcsec = 10800
 
     return radius_arcsec
     
@@ -118,47 +114,61 @@ query coo {ra} {dec} radius={radius}s frame=ICRS
 
 
 
-def query_simbad_whole_csv(filename, output_csv):
-    csv_row_len, _,  _, _, Dec_delta_x,Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, 1)
+def query_simbad_whole_csv(filename):
+    csv_row_len, _, _, _, _ = read_csv_file(filename, 1)
     print(csv_row_len)
-    results = [["RA (deg)", "Dec (deg)", "radius", "Object Name", "Object Type"]]
 
     for i in range(1, csv_row_len + 1):
-        coord = convert_single_csv_row_coordinate(filename, i)
-        ra = coord.ra.deg
-        dec = coord.dec.deg
+        results = [["RA (deg)", "Dec (deg)", "radius", "Object Name", "Object Type", "Flux"]]
 
-        _, _, _, _, Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2 = read_csv_file(filename, i)
-        radius = calculate_radius(Dec_delta_x, Dec_delta_y, RA_delta_x, RA_delta_y, crpix1, crpix2, naxis1, naxis2)
+        try:
+            coord = convert_single_csv_row_coordinate(filename, i)
+            ra = coord.ra.deg
+            dec = coord.dec.deg
 
-        objects = query_bright_objects(ra, dec, radius, min_flux_v=10.0)
-        for name, otype, flux in objects:
-            results.append([ra, dec, radius, name, otype,flux])
+            # Also parse raw values just in case
+            _, year, cluster, ra_str, dec_str = read_csv_file(filename, i)
+            ra = float(ra_str)
+            dec = float(dec_str)
 
-        print(f"[{i}/{csv_row_len}] {ra:.5f}, {dec:.5f} → {len(objects)} object(s) found")
+            radius = calculate_radius()
+            objects = query_bright_objects(ra, dec, radius, min_flux_v=10.0)
+
+            for name, otype, flux in objects:
+                results.append([ra, dec, radius, name, otype, flux])
+
+            print(f"[{i}/{csv_row_len}] {ra:.5f}, {dec:.5f} → {len(objects)} object(s) found")
+
+        except Exception as e:
+            print(f"[{i}/{csv_row_len}] Error processing row {i}: {e}")
+            results.append(["Error", "Error", "Error", "N/A", "N/A", "N/A"])
+
+        # Save results for this row only
+        try:
+            output_csv = f"{year}_{cluster}.csv"
+            with open(output_csv, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerows(results)
+            print(f"Saved results to {output_csv}\n")
+        except Exception as save_error:
+            print(f"Failed to save CSV for row {i}: {save_error}")
 
 
-    # Save to CSV
-    with open(output_csv, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerows(results)
-
-    print(f"\nSaved results to {output_csv}")
-
-
-
-# run this code main
 if __name__ == "__main__":
     start_time = time.time()  # Start timer
 
     ############### CHANGE FILENAMES HERE #########################
-    input_filename = "cluster_test_input.csv"
-    output_filename="cluster_test_brightness_test_cluster.csv"
+    input_filename = "cluster_output5_clean copy.csv"
     ###############################################################
 
-    query_simbad_whole_csv(input_filename, output_filename)
+    query_simbad_whole_csv(input_filename)
 
     end_time = time.time()  # End timer
     duration = end_time - start_time
 
     print(f"\nFinished in {duration:.2f} seconds ({duration/60:.2f} minutes)")
+
+'''
+if __name__ == "__main__":
+    read_csv_file('cluster_output5_clean.csv', 1)
+'''

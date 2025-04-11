@@ -102,7 +102,7 @@ def find_multiple_year_clusters(start_year, end_year, distance, density, filenam
 
     for year in range(start_year, end_year + 1):
         objects_list = find_objects_in_year_range(year, year)
-        labels, cluster_info = find_cluster(objects_list, distance, density, plot=False)
+        labels, cluster_info = find_cluster(objects_list, distance, density, plot=True)
 
         with open(filename, "a") as file:
             if file.tell() == 0:
@@ -117,11 +117,11 @@ def find_multiple_year_clusters(start_year, end_year, distance, density, filenam
 
 
 ###################### CHANGE THIS PART ######################
-start_year = 1900
-end_year = 1930
-distance = 5
-density = 20
-filename = "cluster_output.csv"
+start_year = 1891
+end_year = 1988
+distance = 3
+density = 40
+filename = "cluster_output5.csv"
 ##############################################################
 
 # objects_list = find_objects_in_year_range(start_year, end_year)
