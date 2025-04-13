@@ -120,8 +120,8 @@ def query_simbad_whole_csv(filename, output_csv):
 start_time = time.time()  # Start timer
 
 ############### CHANGE FILENAMES HERE #########################
-input_filename = "random_sky_coordinates1.csv"
-output_filename="random_sky_objects1.csv"
+input_filename = "random_sky_coordinates_2.csv"
+output_filename="random_sky_objects2.csv"
 ###############################################################
 
 if __name__ == "__main__":
